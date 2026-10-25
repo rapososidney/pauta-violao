@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Pauta Violão · Leitura com o Instrumento</title>
+<style>
+  :root{
+    --ebano:#171109;
+    --madeira:#221a10;
+    --carta:#2a2014;
+    --borda:#3d3122;
+    --ambar:#e0a458;
+    --ambar-claro:#f3c98b;
+    --creme:#f0e6d2;
+    --creme-suave:#c9bda5;
+    --certo:#8fbf7f;
+    --erro:#d98873;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:'Outfit',system-ui,sans-serif;
+    background:
+      radial-gradient(120% 80% at 50% -10%, #2b2113 0%, var(--ebano) 60%),
+      var(--ebano);
+    color:var(--creme);
+    display:flex;justify-content:center;
+    min-height:100%;
+    padding:18px 14px 32px;
+  }
+  .app{width:100%;max-width:430px;display:flex;flex-direction:column;gap:16px;position:relative}
+
+  body.claro{
+    --ebano:#f3ead6;
+    --madeira:#ece0c5;
+    --carta:#f7efdd;
+    --borda:#d9c9a4;
+    --ambar:#b97d2c;
+    --ambar-claro:#8a5a14;
+    --creme:#3a2d1a;
+    --creme-suave:#7d6c4d;
+    --certo:#3f7d2e;
+    --erro:#b04a31;
+    background:
+      radial-gradient(120% 80% at 50% -10%, #fdf7e8 0%, #f1e6cd 60%),
+      #f1e6cd;
+  }
+  .tema-botao{
+    position:absolute;top:0;right:0;z-index:2;
+    width:42px;height:42px;border-radius:50%;
+    border:1px solid var(--borda);background:var(--madeira);
+    font-size:1.05rem;line-height:1;cursor:pointer;
+    transition:transform .08s;
+  }
+  .tema-botao:active{transform:scale(.92)}
+
+  header{text-align:center;padding-top:6px}
+  header h1{
+    font-family:'Fraunces',serif;font-weight:700;font-size:1.5rem;
+    color:var(--ambar-claro);
+  }
+  header p{font-size:.82rem;color:var(--creme-suave);margin-top:2px}
+
+  /* ---------- pauta ---------- */
+  .palco{
+    background:var(--madeira);
+    border:1px solid var(--borda);
+    border-radius:14px;
+    padding:6px 0;
+    overflow:hidden;
+  }
+  .palco svg{display:block;width:100%;height:auto}
+  .linha-pauta{stroke:var(--creme-suave);stroke-width:1.1;opacity:.85}
+  .zona-faixa{fill:rgba(224,164,88,.13)}
+  .zona-borda{stroke:var(--ambar);stroke-width:1.6}
+  .clave-fundo{fill:var(--madeira)}
+  .clave-cheia{fill:var(--ambar)}
+  .cabeca{fill:var(--creme);transition:fill .12s}
+  .haste{stroke:var(--creme);stroke-width:1.8;transition:stroke .12s}
+  .suplementar{stroke:var(--creme);stroke-width:1.6;transition:stroke .12s}
+  g.boa .cabeca{fill:var(--certo)}
+  g.boa .haste{stroke:var(--certo)}
+  g.boa .suplementar{stroke:var(--certo)}
+  g.ruim .cabeca{fill:var(--erro)}
+  g.ruim .haste{stroke:var(--erro)}
+  g.ruim .suplementar{stroke:var(--erro)}
+
+  .feedback{
+    text-align:center;font-size:.95rem;min-height:1.4em;font-weight:500;
+    color:var(--creme-suave);
+  }
+  .feedback.ok{color:var(--certo)}
+  .feedback.nao{color:var(--erro)}
+
+  /* ---------- respostas ---------- */
+  .respostas{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+  .opcao{
+    font-family:'Outfit',sans-serif;font-size:1.02rem;font-weight:600;
+    color:var(--creme);background:var(--carta);
+    border:1px solid var(--borda);border-radius:12px;
+    min-height:54px;cursor:pointer;
+    transition:transform .08s, background .15s, border-color .15s;
+  }
+  .opcao:active{transform:scale(.95)}
+
+  /* ---------- controles ---------- */
+  .painel{
+    background:var(--carta);
+    border:1px solid var(--borda);
+    border-radius:14px;
+    padding:14px 16px;
+  }
+  .painel .rotulo{
+    font-size:.78rem;color:var(--creme-suave);display:block;
+    margin-bottom:10px;letter-spacing:.04em;
+  }
+  .painel .rotulo b{color:var(--ambar-claro);font-size:.95rem}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;
+    width:100%;height:4px;border-radius:99px;
+    background:var(--borda);outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;
+    width:24px;height:24px;border-radius:50%;
+    background:var(--ambar);border:3px solid var(--ebano);
+    box-shadow:0 0 8px rgba(224,164,88,.5);cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:24px;height:24px;border-radius:50%;
+    background:var(--ambar);border:3px solid var(--ebano);cursor:pointer;
+  }
+
+  .rodape{display:flex;align-items:center;gap:12px}
+  .botao{
+    font-family:inherit;font-size:.95rem;font-weight:600;
+    background:var(--ambar);color:var(--ebano);
+    border:none;border-radius:12px;
+    padding:13px 24px;cursor:pointer;
+    transition:transform .08s;
+  }
+  .botao:active{transform:scale(.96)}
+  .placar{font-size:.85rem;color:var(--creme-suave);margin-left:auto;text-align:right}
+  .placar b{color:var(--ambar-claro);font-weight:600}
+  .afinador .escuta{
+    font-family:'Fraunces',serif;font-weight:700;font-size:1.7rem;
+    color:var(--ambar-claro);text-align:center;min-height:1.3em;
+  }
+  .afinador .escuta small{
+    font-family:'Outfit',sans-serif;font-size:.78rem;
+    color:var(--creme-suave);font-weight:500;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <button class="tema-botao" id="btnTema" aria-label="Alternar tema claro/escuro">&#x2600;&#xFE0F;</button>
+
+  <header>
+    <h1>Pauta Violão</h1>
+    <p>Toque no violão a nota que cruza a zona âmbar.</p>
+  </header>
+
+  <section class="palco">
+    <svg id="palcoSvg" viewBox="0 0 360 140" aria-label="Pauta musical em movimento"></svg>
+  </section>
+
+  <div class="feedback" id="feedback">Ative o microfone para começar.</div>
+
+  <section class="painel afinador">
+    <span class="rotulo">O que o microfone ouve</span>
+    <div class="escuta" id="escuta">&#8211;</div>
+  </section>
+
+  <section class="painel">
+    <span class="rotulo">Velocidade <b id="velValor">3</b>/10</span>
+    <input type="range" id="velRange" min="1" max="10" step="1" value="3">
+  </section>
+
+  <div class="rodape">
+    <button class="botao" id="btnMic">&#127908; Microfone</button>
+    <button class="botao" id="btnRolar" style="display:none">Iniciar</button>
+    <div class="placar" id="placar">Acertos <b>0</b> · Erros <b>0</b> · Seq <b>0</b></div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+
+  /* ---------- geometria da pauta (unidades do viewBox 360x140) ----------
+     Linhas em y = 35..95 (espaçamento 15). Linha de baixo (y=95) = Mi4.
+     Cada passo de nota (linha/espaço) sobe 7.5. */
+  const Y_BASE = 95, PASSO = 7.5;
+  const ZONA_X = 200, ZONA_MEIA = 40;   // centro e meia-largura da zona
+  const NASCE_X = 390, MORRE_X = -30;
+  const VAO = 150;                       // distância horizontal entre notas
+
+  const ESCALA = [
+    {nome:"Do", passo:-2, midi:60, sup:true},
+    {nome:"Re", passo:-1, midi:62},
+    {nome:"Mi", passo:0,  midi:64},
+    {nome:"Fa", passo:1,  midi:65},
+    {nome:"Sol",passo:2,  midi:67},
+    {nome:"La", passo:3,  midi:69},
+    {nome:"Si", passo:4,  midi:71},
+    {nome:"Do", passo:5,  midi:72},
+    {nome:"Re", passo:6,  midi:74},
+    {nome:"Mi", passo:7,  midi:76},
+    {nome:"Fa", passo:8,  midi:77}
+  ];
+  const NOMES = ["Do","Re","Mi","Fa","Sol","La","Si"];
+  const NOMES_PC = ["Do","Do#","Re","Re#","Mi","Fa","Fa#","Sol","Sol#","La","La#","Si"];
+
+  /* Clave de sol extraída do SVG enviado (MuseScore/Bravura, contorno preenchido).
+     Origem do glifo (y=0) fica na linha do Sol; 1 espaço de pauta do glifo = 25 un. */
+  const D_CLAVE = "M12.2969,51.2969 C12.2969,57.9063 17.2969,66.6094 30.7969,66.6094 C35.5,66.6094 39.6094,65.4063 43.2031,63.2031 C48.6094,59.4063 50,52.7969 50,46.5 C50,42.6094 49.4063,38.1094 48.4063,32.4063 C48.1094,30.4063 47.5,27.4063 46.9063,23.5 C56.7031,20.2969 64,10.0938 64,-0.203125 C64,-15.2969 53.2969,-25.5 38.7031,-25.5 C37.7031,-31.5 36.7031,-37.4063 35.9063,-43 C46.4063,-54.1094 53.7031,-66.6094 53.7031,-82.5 C53.7031,-91.6094 50.9063,-99 49.2969,-102.609 C46.9063,-107.703 44,-111.203 42.2031,-111.203 C41.5,-111.203 38.4063,-110 35.1094,-106.109 C28.7031,-98.5 26.9063,-85.7031 26.9063,-77.3125 C26.9063,-71.9063 27.4063,-67 29.1094,-55.7969 C29,-55.7031 23.7969,-50.4063 21.7031,-48.7031 C12.5938,-40.2969 0,-28.1094 0,-8.09375 C0,10.5938 16.2969,25.2969 34.9063,25.2969 C37.7969,25.2969 40.5,25 42.7969,24.5938 C44.7031,34.2031 45.9063,41.2031 45.9063,46.5 C45.9063,56.9063 40.5,62.4063 30.4063,62.4063 C28,62.4063 25.9063,61.9063 25.7031,61.9063 C25.6094,61.7969 25.4063,61.7031 25.4063,61.6094 C25.4063,61.4063 25.6094,61.2969 25.9063,61.2969 C30.6094,60.5 35.2969,56.5 35.2969,50.1094 C35.2969,44.7031 31.2031,39 23.7031,39 C16.7031,39 12.2969,44.7031 12.2969,51.2969 M33.2031,-82.2031 C34.1094,-86.2031 38.7031,-96.7031 43.9063,-96.7031 C45.4063,-96.7031 47.7969,-91.9063 47.7969,-84.9063 C47.7969,-74.5 40.1094,-66.7031 33.2031,-59.9063 C32.6094,-63.9063 32.1094,-67.7969 32.1094,-72 C32.1094,-75.7031 32.4063,-79.1094 33.2031,-82.2031 M42,20.5938 C40,21 38.1094,21.2031 36.2031,21.2031 C21.9063,21.2031 9.70313,11.2031 9.70313,-3.90625 C9.70313,-16.0938 18.2969,-27 27.1094,-34.6094 C28.7969,-36.1094 30.4063,-37.5 31.9063,-39 C32.7969,-33.6094 33.5,-28.9063 34.2031,-24.7969 C25.0938,-22.0938 18.9063,-12.5 18.9063,-3.09375 C18.9063,3.90625 24.4063,13.5 32.4063,13.5 C33.2031,13.5 34.1094,13.0938 34.1094,12.2031 C34.1094,11.2969 33.1094,10.7969 31.9063,10 C28,7.59375 25.7969,5 25.7969,0.09375 C25.7969,-6 30.4063,-10.9063 36.2031,-12.2969 L42,20.5938 M56.2031,2.09375 C56.2031,9.20313 53.2969,16.5 46.2031,19.4063 C44.1094,7.40625 41.4063,-8.5 40.7031,-12.9063 C49.7031,-12.9063 56.2031,-6.79688 56.2031,2.09375";
+  const ESCALA_CLAVE = 15/25;  // espaço da nossa pauta (15) / espaço do glifo (25)
+
+  const svg = $("palcoSvg"), elFeedback = $("feedback"),
+        elEscuta = $("escuta"), elPlacar = $("placar"), btnMic = $("btnMic"),
+        btnRolar = $("btnRolar"), velRange = $("velRange"), velValor = $("velValor");
+
+  /* ---------- cenário fixo: linhas, zona e clave ---------- */
+  let camadaNotas;
+  function montarCenario(){
+    svg.innerHTML = "";
+    // zona central (atrás de tudo)
+    const faixa = document.createElementNS(NS,"rect");
+    faixa.setAttribute("x", ZONA_X - ZONA_MEIA); faixa.setAttribute("y", 8);
+    faixa.setAttribute("width", ZONA_MEIA*2); faixa.setAttribute("height", 124);
+    faixa.setAttribute("class","zona-faixa");
+    svg.appendChild(faixa);
+    [ZONA_X - ZONA_MEIA, ZONA_X + ZONA_MEIA].forEach(x => {
+      const l = document.createElementNS(NS,"line");
+      l.setAttribute("x1",x); l.setAttribute("x2",x);
+      l.setAttribute("y1",8); l.setAttribute("y2",132);
+      l.setAttribute("class","zona-borda");
+      svg.appendChild(l);
+    });
+    // cinco linhas da pauta
+    for(let i=0;i<5;i++){
+      const l = document.createElementNS(NS,"line");
+      l.setAttribute("x1",0); l.setAttribute("x2",360);
+      l.setAttribute("y1",35+i*15); l.setAttribute("y2",35+i*15);
+      l.setAttribute("class","linha-pauta");
+      svg.appendChild(l);
+    }
+    // camada das notas (entre pauta e clave)
+    camadaNotas = document.createElementNS(NS,"g");
+    svg.appendChild(camadaNotas);
+    // clave fixa por cima, com fundo opaco: as notas passam "por trás"
+    const fundo = document.createElementNS(NS,"rect");
+    fundo.setAttribute("x",0); fundo.setAttribute("y",8);
+    fundo.setAttribute("width",52); fundo.setAttribute("height",124);
+    fundo.setAttribute("class","clave-fundo");
+    svg.appendChild(fundo);
+    for(let i=0;i<5;i++){
+      const l = document.createElementNS(NS,"line");
+      l.setAttribute("x1",0); l.setAttribute("x2",52);
+      l.setAttribute("y1",35+i*15); l.setAttribute("y2",35+i*15);
+      l.setAttribute("class","linha-pauta");
+      svg.appendChild(l);
+    }
+    const clave = document.createElementNS(NS,"path");
+    clave.setAttribute("d", D_CLAVE);
+    clave.setAttribute("class","clave-cheia");
+    clave.setAttribute("transform","translate(7,80) scale(" + ESCALA_CLAVE + ")");
+    svg.appendChild(clave);
+  }
+  montarCenario();
+
+  /* ---------- estado do jogo ---------- */
+  let rolando = false, notas = [], rafId = null, ultimoTs = null, quadro = 0;
+  let acertos = 0, erros = 0, sequencia = 0, ultimoMidi = -1;
+  let velocidade = 30 + 3*18; // nível 3
+
+  function criarNota(item){
+    const g = document.createElementNS(NS,"g");
+    const y = Y_BASE - item.passo*PASSO;
+    if(item.sup){
+      const s = document.createElementNS(NS,"line");
+      s.setAttribute("x1",-13); s.setAttribute("x2",13);
+      s.setAttribute("y1",y); s.setAttribute("y2",y);
+      s.setAttribute("class","suplementar");
+      g.appendChild(s);
+    }
+    // haste de semínima: abaixo da linha central (Si4), sobe à direita;
+    // do Si4 para cima, desce à esquerda. Comprimento = uma oitava (7 passos).
+    const sobe = item.passo < 4;
+    const xh = sobe ? 7.4 : -7.4;
+    const h = document.createElementNS(NS,"line");
+    h.setAttribute("x1",xh); h.setAttribute("x2",xh);
+    h.setAttribute("y1", sobe ? y-2 : y+2);
+    h.setAttribute("y2", sobe ? y-52.5 : y+52.5);
+    h.setAttribute("class","haste");
+    g.appendChild(h);
+    const e = document.createElementNS(NS,"ellipse");
+    e.setAttribute("cx",0); e.setAttribute("cy",y);
+    e.setAttribute("rx",8.5); e.setAttribute("ry",6.2);
+    e.setAttribute("transform","rotate(-15 0 "+y+")");
+    e.setAttribute("class","cabeca");
+    g.appendChild(e);
+    camadaNotas.appendChild(g);
+    return g;
+  }
+
+  function nascer(){
+    let item;
+    do { item = ESCALA[Math.floor(Math.random()*ESCALA.length)]; }
+    while(item.midi === ultimoMidi);
+    ultimoMidi = item.midi;
+    const el = criarNota(item);
+    const n = { item, x: NASCE_X, el, julgada:false };
+    el.setAttribute("transform","translate("+n.x+",0)");
+    notas.push(n);
+  }
+
+  function atualizarPlacar(){
+    elPlacar.innerHTML = "Acertos <b>"+acertos+"</b> · Erros <b>"+erros+"</b> · Seq <b>"+sequencia+"</b>";
+  }
+
+  function avisar(classe, texto){
+    elFeedback.className = "feedback " + classe;
+    elFeedback.textContent = texto;
+  }
+
+  function laco(ts){
+    if(!rolando) return;
+    if(ultimoTs === null) ultimoTs = ts;
+    const dt = (ts - ultimoTs)/1000;
+    ultimoTs = ts;
+
+    // nasce nova nota quando a última já avançou um vão
+    const ultima = notas[notas.length-1];
+    if(!ultima || ultima.x <= NASCE_X - VAO) nascer();
+
+    for(let i = notas.length-1; i >= 0; i--){
+      const n = notas[i];
+      n.x -= velocidade*dt;
+      n.el.setAttribute("transform","translate("+n.x+",0)");
+      // escapou da zona sem resposta
+      if(!n.julgada && n.x < ZONA_X - ZONA_MEIA){
+        n.julgada = true;
+        n.el.classList.add("ruim");
+        erros++; sequencia = 0;
+        buzina();
+        cooldownAte = performance.now() + 700;
+        avisar("nao","\u2717 Escapou: era "+n.item.nome+".");
+        atualizarPlacar();
+      }
+      if(n.x < MORRE_X){
+        n.el.remove();
+        notas.splice(i,1);
+      }
+    }
+    quadro++;
+    if(quadro % 2 === 0) detectar();
+    rafId = requestAnimationFrame(laco);
+  }
+
+  /* ---------- detecção de altura (autocorrelação, como nos afinadores) ---------- */
+  let analisador = null, bufDet = null;
+  let estPc = -1, estCont = 0, cooldownAte = 0;
+
+  function autoCorrelacao(buf, taxa){
+    const N = buf.length;
+    let rms = 0;
+    for(let i=0;i<N;i++) rms += buf[i]*buf[i];
+    rms = Math.sqrt(rms/N);
+    if(rms < 0.012) return -1;                       // portão de silêncio
+    let r1 = 0, r2 = N-1;
+    for(let i=0;i<N/2;i++) if(Math.abs(buf[i]) < 0.2){ r1 = i; break; }
+    for(let i=1;i<N/2;i++) if(Math.abs(buf[N-i]) < 0.2){ r2 = N-i; break; }
+    const b = buf.slice(r1, r2), M = b.length;
+    const lagMax = Math.min(M-1, Math.floor(taxa/70)); // até ~70 Hz
+    const c = new Float32Array(lagMax+1);
+    for(let lag=0; lag<=lagMax; lag++)
+      for(let i=0; i<M-lag; i++) c[lag] += b[i]*b[i+lag];
+    let d = 0;
+    while(d < lagMax && c[d] > c[d+1]) d++;
+    let maxV = -1, T = -1;
+    for(let i=d; i<=lagMax; i++) if(c[i] > maxV){ maxV = c[i]; T = i; }
+    if(T <= 0) return -1;
+    const x1 = c[T-1], x2 = c[T], x3 = (T+1 <= lagMax) ? c[T+1] : x2;
+    const a2 = (x1 + x3 - 2*x2)/2, b2 = (x3 - x1)/2;
+    if(a2) T = T - b2/(2*a2);                        // interpolação parabólica
+    return taxa/T;
+  }
+
+  function detectar(){
+    if(!analisador) return;
+    analisador.getFloatTimeDomainData(bufDet);
+    const f = autoCorrelacao(bufDet, ctx.sampleRate);
+    if(f < 70 || f > 1200){ estCont = 0; elEscuta.textContent = "\u2013"; return; }
+    const midiF = 69 + 12*Math.log2(f/440);
+    const midi = Math.round(midiF);
+    const cents = Math.round((midiF - midi)*100);
+    const pc = ((midi % 12) + 12) % 12;
+    elEscuta.innerHTML = NOMES_PC[pc] +
+      "<small> oit. " + (Math.floor(midi/12)-1) + " \u00b7 " + (cents>=0?"+":"") + cents + "\u00a2</small>";
+    if(pc === estPc) estCont++; else { estPc = pc; estCont = 1; }
+    if(estCont === 4) notaOuvida(pc);                // 4 quadros estáveis = nota firmada
+  }
+
+  function notaOuvida(pc){
+    if(!rolando) return;
+    if(performance.now() < cooldownAte) return;
+    const naZona = notas.find(n => !n.julgada && Math.abs(n.x - ZONA_X) <= ZONA_MEIA);
+    if(!naZona) return;                              // tocar fora da zona não pune
+    naZona.julgada = true;
+    cooldownAte = performance.now() + 700;
+    if(pc === naZona.item.midi % 12){
+      naZona.el.classList.add("boa");
+      acertos++; sequencia++;
+      avisar("ok","\u2713 " + naZona.item.nome + "!");
+    } else {
+      naZona.el.classList.add("ruim");
+      erros++; sequencia = 0;
+      buzina();
+      avisar("nao","\u2717 Era " + naZona.item.nome + ", soou " + NOMES_PC[pc] + ".");
+    }
+    atualizarPlacar();
+  }
+
+  /* ---------- sons (Web Audio) ---------- */
+  let ctx = null;
+  function garantirAudio(){
+    if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if(ctx.state === "suspended") ctx.resume();
+  }
+  function tocarMidi(midi, dur){
+    dur = dur || 1.3;
+    garantirAudio();
+    const f = 440*Math.pow(2,(midi-69)/12);
+    const t = ctx.currentTime;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.38,t+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    const filtro = ctx.createBiquadFilter();
+    filtro.type = "lowpass"; filtro.frequency.value = 2400;
+    g.connect(filtro); filtro.connect(ctx.destination);
+    [-3,3].forEach(det => {
+      const o = ctx.createOscillator();
+      o.type = "triangle"; o.frequency.value = f; o.detune.value = det;
+      o.connect(g); o.start(t); o.stop(t+dur);
+    });
+  }
+  function buzina(){
+    garantirAudio();
+    const t = ctx.currentTime;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.22,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.32);
+    g.connect(ctx.destination);
+    [98,104].forEach(fr => {  // batimento dissonante grave
+      const o = ctx.createOscillator();
+      o.type = "sawtooth"; o.frequency.value = fr;
+      o.connect(g); o.start(t); o.stop(t+0.32);
+    });
+  }
+
+  /* ---------- microfone ---------- */
+  btnMic.addEventListener("click", async () => {
+    try{
+      garantirAudio();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false }
+      });
+      const fonte = ctx.createMediaStreamSource(stream);
+      analisador = ctx.createAnalyser();
+      analisador.fftSize = 2048;
+      bufDet = new Float32Array(analisador.fftSize);
+      fonte.connect(analisador);
+      btnMic.style.display = "none";
+      btnRolar.style.display = "inline-block";
+      avisar("","Microfone ativo. Toque Iniciar e boa leitura!");
+    }catch(e){
+      avisar("nao","Sem acesso ao microfone. Se o arquivo foi aberto localmente, hospede em HTTPS (ex.: GitHub Pages) e use por l\u00e1.");
+    }
+  });
+
+  /* ---------- controles ---------- */
+  btnRolar.addEventListener("click", () => {
+    garantirAudio(); // primeiro gesto destrava o som no Chrome mobile
+    rolando = !rolando;
+    btnRolar.textContent = rolando ? "Pausar" : "Continuar";
+    if(rolando){
+      ultimoTs = null;
+      avisar("","");
+      rafId = requestAnimationFrame(laco);
+    } else {
+      cancelAnimationFrame(rafId);
+      avisar("","Pausado.");
+    }
+  });
+
+  velRange.addEventListener("input", () => {
+    const nivel = +velRange.value;
+    velValor.textContent = nivel;
+    velocidade = 30 + nivel*18;  // 48 a 210 unidades/s
+  });
+
+  /* ---------- tema claro/escuro ---------- */
+  const btnTema = $("btnTema");
+  function aplicarTema(t){
+    document.body.classList.toggle("claro", t === "claro");
+    btnTema.textContent = t === "claro" ? "\u{1F319}" : "\u2600\uFE0F";
+  }
+  let tema = "escuro";
+  try{ tema = localStorage.getItem("pautaViolao_tema") || "escuro"; }catch(e){}
+  aplicarTema(tema);
+  btnTema.addEventListener("click", () => {
+    tema = (tema === "claro") ? "escuro" : "claro";
+    try{ localStorage.setItem("pautaViolao_tema", tema); }catch(e){}
+    aplicarTema(tema);
+  });
+})();
+</script>
+</body>
+</html>
